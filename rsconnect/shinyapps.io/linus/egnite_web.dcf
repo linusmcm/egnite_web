@@ -5,9 +5,9 @@ account: linus
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4532555
-bundleId: 4980208
+bundleId: 5003756
 url: https://linus.shinyapps.io/egnite_web/
-when: 1630323829.99903
-lastSyncTime: 1630323829.99903
+when: 1630910487.83592
+lastSyncTime: 1630910487.83592
 asMultiple: FALSE
 asStatic: FALSE
