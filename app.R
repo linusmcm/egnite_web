@@ -2,6 +2,7 @@ source("global.R")
 
 ui <- fullPage(
      useShinyjs()
+    , useShinyalert()
     , inlineCSS("#well_panel.well { background-color: #f5f5f500!important; box-shadow: 2px 2px 2px rgba(0,0,0,.5)!important;}")
     , inlineCSS("h1 { text-shadow: 2px 2px 2px rgba(0,0,0,.5)!important; color: #fff!important; }")
     , inlineCSS("h3 { text-shadow: 2px 2px 2px rgba(0,0,0,.5)!important; }")
@@ -12,16 +13,17 @@ ui <- fullPage(
     , opts = OPTIONS
     , menu = c("egnite" = "egnite","partners" = "partners","contact" = "contact")
     , fullSection(menu = "egnite"
+                 , absolutePanel(tags$a(href='.http://egnite.com.au',target="_blank", tags$img(src='logo_blue_flame_web.png', width='50%')), top = '5px', left = '5px')
                  , fullColumn(tagList(visNetworkOutput("intro", width = "100%", height = "900px"), shinyjs::hidden(div(id = "element", uiOutput("dynamic_display")))) , width = 12))
     , fullSection(menu = "partners"
                  , absolutePanel(tags$a(href='.http://egnite.com.au',target="_blank", tags$img(src='logo_blue_sticker.png', width='50%')), bottom = '5px', right = '5px')
                  , h1("our partners")
-                 , fullColumn(tags$a(href='https://www.cloudera.com/', target="_blank", tags$img(src='cloudera_logo.png', width='90%')), width=6)
-                 , fullColumn(tagList(tags$a(href='https://www.rstudio.com/', target="_blank", tags$img(src='r_studio_logo.png', width='90%')), h1("RStudio partnership - pending")), width=6))
+                 , fullColumn(tags$a(href='https://www.cloudera.com/', target="_blank", tags$img(src='cloudera_logo.png', width='40%')), width=6)
+                 , fullColumn(tagList(tags$a(href='https://www.rstudio.com/', target="_blank", tags$img(src='r_studio_logo.png', width='40%')), h5("RStudio partnership - pending")), width=6))
     , fullSection(menu = "contact"
                 , absolutePanel(tags$a(href='.http://egnite.com.au',target="_blank", tags$img(src='logo_blue_sticker.png', width='50%')), bottom = '5px', right = '5px')
                # , a(h1("contact egnite"), href="mailto:info@egnite.com.au"))
-                , fullColumn(tags$a(href='mailto:info@egnite.com.au', target="_blank", tags$img(src='contact_egnite.png', width='50%')), width=12))
+                , fullColumn(tags$a(href='mailto:info@egnite.com.au', target="_blank", tags$img(src='contact_egnite.png', width='30%')), width=12))
 
     )
 
@@ -30,6 +32,7 @@ server <- function(input, output)
     current_node_id <- reactiveVal("egnite")
     node_group <- reactiveVal("egnite")
     nodes_in_group <- reactiveVal()
+    all_node <- reactiveVal()
     dynamic_x <- reactiveVal(60)
     dynamic_y <- reactiveVal(60)
 
@@ -37,8 +40,8 @@ server <- function(input, output)
     # all_node <- reactiveVal()
     # observe(test_node(req(input$click$nodes)))
     # #{"custom":{"visShinyFocus":{"id":"intro","focusId":["egnite"],"options":{"scale":1,"offset":{"x":-450,"y":-100},"locked":true,"animation":{"duration":500,"easingFunction":"easeInOutQuad"}}}}}
-    # observe(all_node(list(req(input$click$pointer$DOM$x), req(input$click$pointer$DOM$y) )))
-    # observeEvent(all_node(), { print(req(all_node())) })
+    observe(all_node(list(req(input$click$pointer$DOM$x), req(input$click$pointer$DOM$y) )))
+    observeEvent(all_node(), { print(req(all_node())) })
 
 
     observeEvent(input$click$nodes,
@@ -70,6 +73,8 @@ server <- function(input, output)
                                  , use.names = F))
 
             }
+
+
             else
             {
                 shinyjs::hide("element")
@@ -80,16 +85,12 @@ server <- function(input, output)
                 visFit(nodes = nodes_in_group()
                        , animation = list(duration = 500, easingFunction = "easeInOutQuad")
                        )
-                # visFocus(
-                #     scale = 1.5
-                #     # , offset = list(x = 0, y = 0)
-                #     # , locked = TRUE
-                #     # , animation = list(duration = 1500, easingFunction = "easeInOutQuad")
-                #     )
-
-        }, ignoreNULL = T, ignoreInit = T)
+         }, ignoreNULL = T, ignoreInit = T)
+    #---------------------------------------------------------------------------------- #
+    #---------------------------------------------------------------------------------- #
     output$header_text <- renderText(unlist(NODES |> filter(id == req(current_node_id())) |> select(label), use.names = F))
     output$body_text <- renderText(unlist(NODES |> filter(id == req(current_node_id())) |> select(body_text), use.names = F))
+    #---------------------------------------------------------------------------------- #
     output$dynamic_display <- renderUI({
         absolutePanel(
             wellPanel(id = "well_panel"
@@ -105,9 +106,13 @@ server <- function(input, output)
     {
         visNetwork(NODES, edges, width = "100%", height = "100%") |>
             visLayout(randomSeed = 123, improvedLayout = T) |>
-            visOptions(highlightNearest = F, nodesIdSelection = list(enabled = F, selected = "egnite") ) |>
+            visOptions(highlightNearest = T
+                       , nodesIdSelection = list(enabled = F, selected = "egnite") ) |>
              visEvents(select = "function(nodes){ Shiny.onInputChange('click', nodes); }") |>
-             visInteraction(hover = T, hoverConnectedEdges = T, selectable = T, selectConnectedEdges = F ) |>
+             visInteraction(hover = T
+                            , hoverConnectedEdges = T
+                            , selectable = T
+                            , selectConnectedEdges = F ) |>
              visEdges(physics = T
                       , smooth = list(enabled = F)
                       , hoverWidth = 1
@@ -127,35 +132,14 @@ server <- function(input, output)
                         , scaling = list(min = 4
                                          , max = 80
                                          , label = list(enabled = TRUE, min = 14, max = 80, maxVisible = 24, drawThreshold = 14))) |>
-            # visPhysics(solver = "barnesHut"
-            #            , maxVelocity = 1
-            #            , stabilization =list(onlyDynamicEdges = T)
-            #            , adaptiveTimestep = T
-            #            , barnesHut= list(gravitationalConstant = -2000
-            #                                     , centralGravity = 0.3
-            #                                     , springLength = 95
-            #                                     , springConstant = 0.04
-            #                                     , damping = 1
-            #                                     , avoidOverlap = 1)) |>
-            # visPhysics(solver = "forceAtlas2Based"
-            #            , maxVelocity = 1
-            #            , stabilization =list(onlyDynamicEdges = T)
-            #            , adaptiveTimestep = T
-            #            , forceAtlas2Based= list(gravitationalConstant = -50
-            #                                     , centralGravity = 0.05
-            #                                     , springLength = 100
-            #                                     , springConstant = .05
-            #                                     , damping = 1
-            #                                     , avoidOverlap = 1)) |>
-           # visHierarchicalLayout() |>
              visPhysics(solver = "repulsion"
                         , maxVelocity = 50
                        #, stabilization =list(onlyDynamicEdges = T)
                       #  , timestep = 0.1
                         , adaptiveTimestep = T
-                        , repulsion= list(nodeDistance = 100
+                        , repulsion= list(nodeDistance = 125
                                           , damping = 1
-                                          , springLength = 200
+                                          , springLength = 50
                                           , springConstant= 0.1
                                           , centralGravity = -1)) |>
             visGroups(groupname = "egnite"
@@ -214,6 +198,5 @@ server <- function(input, output)
                                      , highlight = list(background = 'rgba(68,101,139,0.75)', border = 'rgba(77,141,201,1)')
                                      , hover  = list(background = 'rgba(68,101,139,0.5)', border = 'rgb(255,255,255)')))
         })
-
 }
 shinyApp(ui, server)

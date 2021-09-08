@@ -31,14 +31,14 @@ a {
   color: #fff!important;
 }
 
-
+/*
 #tocMenu li {
 background: rgb(255 255 255 / 0%)!important;
 font-size: 28px;
 font-weight: 500;
 padding-left: 5px!important;
 }
-
+*/
 div#statement.shiny-html-output.shiny-bound-output {
     background-color: #f5f5f500!important;
 }
@@ -55,8 +55,14 @@ h2 {
     background-color: #f5f5f500!important;
 }
 
-button {
-  background-image: url(images/cancel.png);
+div.sweet-alert.alert-size-s.showSweetAlert.visible {
+  font-family: 'Jura'!important;
+}
+
+
+
+egnite.ul#tocMenu.data-menuanchor {
+  background-image: url(https://github.com/linusmcm/egnite_web/blob/main/www/logo_blue_flame_center.png);
   background-repeat: no-repeat;
   background-position: 50% 50%;
   /* put the height and width of your image here */

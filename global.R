@@ -9,7 +9,7 @@ library(shinyjs)
 library(RSQLite)
 library(readxl)
 library(DBI)
-#library(igraph)
+library(shinyalert)
 library(tidyverse)
 # ---------------------------------------------------------- #
 # ---------------------------------------------------------- #
